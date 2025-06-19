@@ -1,13 +1,13 @@
 {
-  "name": "tts-nodejs-render",
+  "name": "tts-nodejs-googleapi",
   "version": "1.0.0",
-  "description": "Text-to-Speech (TTS) with gtts (Node.js version), deployable to Render",
+  "description": "TTS with Google Translate API (no dependency)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "gtts": "^1.1.2",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
   }
 }

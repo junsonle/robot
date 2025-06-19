@@ -1,30 +1,36 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const gTTS = require('gtts');
-
+const fetch = require('node-fetch');
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static('public'));
 
-app.post('/speak', (req, res) => {
+app.post('/speak', async (req, res) => {
   const text = req.body.text;
   if (!text) return res.status(400).json({ error: 'Missing text' });
 
-  const filepath = path.join(__dirname, 'public/output.mp3');
-  const gtts = new gTTS(text, 'vi');
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=vi&client=tw-ob`;
 
-  gtts.save(filepath, (err) => {
-    if (err) {
-      console.error('TTS error:', err);
-      return res.status(500).json({ error: 'Failed to generate speech' });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch TTS');
     }
-    res.json({ url: '/output.mp3' });
-  });
+
+    res.set('Content-Type', 'audio/mpeg');
+    response.body.pipe(res);
+  } catch (err) {
+    console.error('TTS Error:', err);
+    res.status(500).json({ error: 'TTS fetch failed' });
+  }
 });
 
 app.listen(port, () => {
-  console.log(`✅ TTS server is running at http://localhost:${port}`);
+  console.log(`🌐 TTS server running at http://localhost:${port}`);
 });
