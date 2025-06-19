@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>TTS Node.js - Render</title>
+</head>
+<body style="font-family:sans-serif;padding:2rem">
+  <h2>Text to Speech - Tiếng Việt</h2>
+  <textarea id="text" rows="4" style="width:100%" placeholder="Nhập nội dung..."></textarea><br><br>
+  <button onclick="speak()">🔊 Phát âm</button>
+  <p id="status"></p>
+  <audio id="audio" controls style="margin-top:1rem;display:none"></audio>
+
+  <script>
+    async function speak() {
+      const text = document.getElementById('text').value;
+      if (!text) return alert('Vui lòng nhập nội dung');
+
+      document.getElementById('status').innerText = '⏳ Đang xử lý...';
+      const res = await fetch('/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      if (data.url) {
+        const audio = document.getElementById('audio');
+        audio.src = data.url + '?v=' + Date.now(); // tránh cache
+        audio.style.display = 'block';
+        audio.play();
+        document.getElementById('status').innerText = '✅ Đã phát âm!';
+      } else {
+        document.getElementById('status').innerText = '❌ Có lỗi!';
+      }
+    }
+  </script>
+</body>
+</html>
