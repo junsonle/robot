@@ -7,7 +7,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "gtts": "^2.0.0"
+    "gtts": "^1.1.2",
+    "express": "^4.18.2"
   }
 }
