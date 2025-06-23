@@ -14,8 +14,13 @@ const io = new Server(server, {
     cors: {origin: '*'}
 });
 
-const SESSION_FILE = "./etc/secrets/gemini_history.json";
+const SESSION_FILE = "/etc/secrets/gemini_history.json";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// Tạo client
+const client = new textToSpeech.TextToSpeechClient({
+    keyFilename: '/etc/secrets/key.json'
+});
 
 // Load history từ file (định dạng chuẩn: [{ role, parts }])
 let history = [];
@@ -36,11 +41,6 @@ const chat = model.startChat({
     generationConfig: {
         temperature: 0.7,
     },
-});
-
-// Tạo client
-const client = new textToSpeech.TextToSpeechClient({
-    keyFilename: './etc/secrets/key.json'
 });
 
 const rl = readline.createInterface({
