@@ -14,7 +14,7 @@ const io = new Server(server, {
     cors: {origin: '*'}
 });
 
-const SESSION_FILE = "/etc/secrets/gemini_history.json";
+const SESSION_FILE = "./gemini_history.json";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Tạo client
