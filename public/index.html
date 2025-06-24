@@ -2,44 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>ESP32 Audio</title>
+    <title>ESP32 Audio Files</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
         ul { list-style: none; padding: 0; }
-        li { margin-bottom: 12px; }
+        li { margin-bottom: 10px; }
         audio { vertical-align: middle; }
-        button { margin-left: 8px; }
+        button { margin: 8px 0; }
     </style>
 </head>
 <body>
-<h1>🎧 Danh sách file ghi âm</h1>
-<button onclick="deleteAll()">🗑️ Xóa tất cả</button>
+<h1>🎧 Ghi âm từ ESP32</h1>
+<button onclick="deleteAll()">🗑️ Xoá tất cả</button>
 <ul id="fileList">Đang tải...</ul>
 
 <script>
     async function loadList() {
         const res = await fetch('/list');
         const files = await res.json();
-        const ul = document.getElementById('fileList');
-        ul.innerHTML = '';
+        const list = document.getElementById('fileList');
+        list.innerHTML = '';
 
-        if (!files.length) {
-            ul.innerHTML = '<li>Không có file nào.</li>';
+        if (files.length === 0) {
+            list.innerHTML = '<li>Không có file nào.</li>';
             return;
         }
 
-        files.forEach(f => {
+        files.forEach(file => {
             const li = document.createElement('li');
             li.innerHTML = `
-          🔊 <b>${f}</b><br/>
-          <audio controls src="/audio/${f}"></audio>
+          🎵 <b>${file}</b><br/>
+          <audio controls src="/audio/${file}"></audio>
         `;
-            ul.appendChild(li);
+            list.appendChild(li);
         });
     }
 
     async function deleteAll() {
-        if (!confirm("Bạn có chắc muốn xóa toàn bộ file?")) return;
+        if (!confirm("Bạn chắc chắn muốn xoá tất cả file?")) return;
         await fetch('/delete-all', { method: 'DELETE' });
         loadList();
     }
