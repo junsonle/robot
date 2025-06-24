@@ -2,48 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Audio Manager</title>
+    <title>ESP32 Audio</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
         ul { list-style: none; padding: 0; }
-        li { margin-bottom: 10px; }
-        button { margin-left: 10px; }
+        li { margin-bottom: 12px; }
+        audio { vertical-align: middle; }
+        button { margin-left: 8px; }
     </style>
 </head>
 <body>
-<h1>🎵 Danh sách file ghi âm</h1>
-<button onclick="deleteAll()">🗑️ Xoá tất cả</button>
-<ul id="fileList"></ul>
+<h1>🎧 Danh sách file ghi âm</h1>
+<button onclick="deleteAll()">🗑️ Xóa tất cả</button>
+<ul id="fileList">Đang tải...</ul>
 
 <script>
-    async function loadFiles() {
+    async function loadList() {
         const res = await fetch('/list');
         const files = await res.json();
-        const list = document.getElementById('fileList');
-        list.innerHTML = '';
+        const ul = document.getElementById('fileList');
+        ul.innerHTML = '';
 
-        if (files.length === 0) {
-            list.innerHTML = '<li>Không có file nào</li>';
+        if (!files.length) {
+            ul.innerHTML = '<li>Không có file nào.</li>';
             return;
         }
 
-        files.forEach(file => {
+        files.forEach(f => {
             const li = document.createElement('li');
             li.innerHTML = `
-          🔊 <a href="/audio/${file}" target="_blank">${file}</a>
-          <audio controls src="/audio/${file}" style="vertical-align: middle;"></audio>
+          🔊 <b>${f}</b><br/>
+          <audio controls src="/audio/${f}"></audio>
         `;
-            list.appendChild(li);
+            ul.appendChild(li);
         });
     }
 
     async function deleteAll() {
-        if (!confirm('Bạn chắc chắn muốn xoá tất cả file?')) return;
+        if (!confirm("Bạn có chắc muốn xóa toàn bộ file?")) return;
         await fetch('/delete-all', { method: 'DELETE' });
-        loadFiles();
+        loadList();
     }
 
-    loadFiles();
+    loadList();
 </script>
 </body>
 </html>
