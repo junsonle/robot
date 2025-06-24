@@ -1,23 +1,49 @@
-<button onclick="loadFiles()">🔄 Tải lại danh sách</button>
-<button onclick="deleteAll()">🗑 Xóa tất cả file</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Audio Manager</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; }
+        button { margin-left: 10px; }
+    </style>
+</head>
+<body>
+<h1>🎵 Danh sách file ghi âm</h1>
+<button onclick="deleteAll()">🗑️ Xoá tất cả</button>
 <ul id="fileList"></ul>
 
 <script>
-  async function loadFiles() {
-    const res = await fetch('/files');
-    const files = await res.json();
-    document.getElementById('fileList').innerHTML = files.map(f => `
-    <li>
-      🎵 <a href="/audio/${f}" target="_blank">${f}</a>
-      <audio controls src="/audio/${f}"></audio>
-    </li>
-  `).join('');
-  }
+    async function loadFiles() {
+        const res = await fetch('/list');
+        const files = await res.json();
+        const list = document.getElementById('fileList');
+        list.innerHTML = '';
 
-  async function deleteAll() {
-    await fetch('/files', { method: 'DELETE' });
+        if (files.length === 0) {
+            list.innerHTML = '<li>Không có file nào</li>';
+            return;
+        }
+
+        files.forEach(file => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+          🔊 <a href="/audio/${file}" target="_blank">${file}</a>
+          <audio controls src="/audio/${file}" style="vertical-align: middle;"></audio>
+        `;
+            list.appendChild(li);
+        });
+    }
+
+    async function deleteAll() {
+        if (!confirm('Bạn chắc chắn muốn xoá tất cả file?')) return;
+        await fetch('/delete-all', { method: 'DELETE' });
+        loadFiles();
+    }
+
     loadFiles();
-  }
-
-  loadFiles();
 </script>
+</body>
+</html>
