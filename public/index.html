@@ -2,40 +2,26 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>TTS Google API - Node.js</title>
+  <title>Danh sách file âm thanh</title>
 </head>
-<body style="font-family:sans-serif;padding:2rem">
-  <h2>Text to Speech - Google API (Tiếng Việt)</h2>
-  <textarea id="text" rows="4" style="width:100%" placeholder="Nhập nội dung..."></textarea><br><br>
-  <button onclick="speak()">🔊 Phát âm</button>
-  <p id="status"></p>
-  <audio id="audio" controls style="margin-top:1rem;display:none"></audio>
+<body>
+<h2>🎧 Danh sách file âm thanh</h2>
+<ul id="fileList"></ul>
 
-  <script>
-    async function speak() {
-      const text = document.getElementById('text').value;
-      if (!text) return alert('Vui lòng nhập nội dung');
-
-      document.getElementById('status').innerText = '⏳ Đang xử lý...';
-
-      try {
-        const res = await fetch('/speak', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
-        if (!res.ok) throw new Error('TTS lỗi');
-
-        const blob = await res.blob();
-        const audio = document.getElementById('audio');
-        audio.src = URL.createObjectURL(blob);
-        audio.style.display = 'block';
-        audio.play();
-        document.getElementById('status').innerText = '✅ Đã phát âm!';
-      } catch (e) {
-        document.getElementById('status').innerText = '❌ Lỗi!';
-      }
-    }
-  </script>
+<script>
+  fetch('/files')
+          .then(res => res.json())
+          .then(files => {
+            const ul = document.getElementById('fileList');
+            files.forEach(file => {
+              const li = document.createElement('li');
+              li.innerHTML = `
+            🎵 <strong>${file}</strong> <br>
+            <audio controls src="/audio/${file}"></audio>
+          `;
+              ul.appendChild(li);
+            });
+          });
+</script>
 </body>
 </html>
