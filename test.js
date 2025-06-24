@@ -6,15 +6,34 @@ const bodyParser = require("body-parser");
 const app = express();
 const PORT = 3000;
 
-app.use(bodyParser.json({ limit: "10mb" }));
+// 📁 Tạo thư mục audio nếu chưa có
+const audioDir = path.join(__dirname, "audio");
+if (!fs.existsSync(audioDir)) {
+    fs.mkdirSync(audioDir);
+}
 
-// 🟢 Dùng thư mục 'public' làm static (chứa index.html)
+// 📥 Log mỗi request
+app.use((req, res, next) => {
+    console.log(`📥 Yêu cầu: ${req.method} ${req.url}`);
+    next();
+});
+
+app.use(bodyParser.json({
+    limit: '10mb',
+    strict: true,
+    verify: (req, res, buf) => {
+        try {
+            JSON.parse(buf);
+        } catch (e) {
+            throw new Error('Invalid JSON');
+        }
+    }
+}));
+
 app.use(express.static("public"));
-
-// 🟢 Dùng thư mục 'audio' để phục vụ file âm thanh
 app.use("/audio", express.static("audio"));
 
-// 🔵 API: nhận dữ liệu ghi âm từ ESP32
+// 🔴 Nhận audio base64
 app.post("/upload", (req, res) => {
     const audioBase64 = req.body.audio;
     if (!audioBase64) return res.status(400).send("Thiếu 'audio'");
@@ -30,9 +49,9 @@ app.post("/upload", (req, res) => {
     });
 });
 
-// 🔵 API: trả danh sách file trong thư mục 'audio'
+// 📁 API danh sách file
 app.get("/files", (req, res) => {
-    fs.readdir(path.join(__dirname, "audio"), (err, files) => {
+    fs.readdir(audioDir, (err, files) => {
         if (err) return res.status(500).json([]);
         res.json(files.filter(f => f.endsWith(".raw") || f.endsWith(".wav")));
     });
