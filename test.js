@@ -1,7 +1,6 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const bodyParser = require("body-parser");
 
 const app = express();
 const PORT = 3000;
@@ -18,29 +17,23 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(bodyParser.json({
-    limit: '10mb',
-    strict: true,
-    verify: (req, res, buf) => {
-        try {
-            JSON.parse(buf);
-        } catch (e) {
-            throw new Error('Invalid JSON');
-        }
-    }
-}));
+// 📥 Nhận body dạng text/plain (chuỗi base64)
+app.use(express.text({ limit: '20mb' }));
 
+// 📁 Giao diện web & file âm thanh
 app.use(express.static("public"));
 app.use("/audio", express.static("audio"));
 
-// 🔴 Nhận audio base64
+// 🔴 Nhận base64 âm thanh từ ESP32
 app.post("/upload", (req, res) => {
-    const audioBase64 = req.body.audio;
-    if (!audioBase64) return res.status(400).send("Thiếu 'audio'");
+    const audioBase64 = req.body;
+    if (!audioBase64 || audioBase64.length < 100) {
+        return res.status(400).send("Thiếu hoặc dữ liệu không hợp lệ");
+    }
 
     const buffer = Buffer.from(audioBase64, "base64");
     const fileName = `audio_${Date.now()}.raw`;
-    const filePath = path.join(__dirname, "audio", fileName);
+    const filePath = path.join(audioDir, fileName);
 
     fs.writeFile(filePath, buffer, (err) => {
         if (err) return res.status(500).send("Lỗi ghi file");
@@ -54,6 +47,20 @@ app.get("/files", (req, res) => {
     fs.readdir(audioDir, (err, files) => {
         if (err) return res.status(500).json([]);
         res.json(files.filter(f => f.endsWith(".raw") || f.endsWith(".wav")));
+    });
+});
+
+// 🔄 Xóa tất cả file âm thanh
+app.delete("/files", (req, res) => {
+    fs.readdir(audioDir, (err, files) => {
+        if (err) return res.status(500).send("Không đọc được thư mục");
+
+        files.forEach(file => {
+            fs.unlinkSync(path.join(audioDir, file));
+        });
+
+        console.log("🗑️ Đã xóa toàn bộ file audio.");
+        res.send("Đã xóa tất cả file.");
     });
 });
 

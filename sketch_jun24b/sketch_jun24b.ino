@@ -61,15 +61,14 @@ void loop() {
   // Gửi lên server
   HTTPClient http;
   http.begin(SERVER_URL);
-  http.addHeader("Content-Type", "application/json");
+  http.addHeader("Content-Type", "text/plain");  // Chuyển sang text/plain
 
-  String body = "{\"audio\":\"" + encoded + "\"}";
-  Serial.println("📦 JSON gửi:");
-  Serial.println(body.substring(0, 100) + "...");  // chỉ in 100 ký tự đầu
+  Serial.println("📦 Base64 gửi:");
+  Serial.println(encoded.substring(0, 100) + "...");
 
-  int code = http.POST(body);
+  int code = http.POST(encoded);  // Gửi chuỗi base64 trực tiếp
   Serial.printf("📤 Kết quả gửi: %d\n", code);
 
   http.end();
-  delay(5000);  // chờ 5 giây rồi ghi tiếp
+  delay(5000);
 }
