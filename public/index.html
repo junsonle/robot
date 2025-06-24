@@ -1,27 +1,23 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>Danh sách file âm thanh</title>
-</head>
-<body>
-<h2>🎧 Danh sách file âm thanh</h2>
+<button onclick="loadFiles()">🔄 Tải lại danh sách</button>
+<button onclick="deleteAll()">🗑 Xóa tất cả file</button>
 <ul id="fileList"></ul>
 
 <script>
-  fetch('/files')
-          .then(res => res.json())
-          .then(files => {
-            const ul = document.getElementById('fileList');
-            files.forEach(file => {
-              const li = document.createElement('li');
-              li.innerHTML = `
-            🎵 <strong>${file}</strong> <br>
-            <audio controls src="/audio/${file}"></audio>
-          `;
-              ul.appendChild(li);
-            });
-          });
+  async function loadFiles() {
+    const res = await fetch('/files');
+    const files = await res.json();
+    document.getElementById('fileList').innerHTML = files.map(f => `
+    <li>
+      🎵 <a href="/audio/${f}" target="_blank">${f}</a>
+      <audio controls src="/audio/${f}"></audio>
+    </li>
+  `).join('');
+  }
+
+  async function deleteAll() {
+    await fetch('/files', { method: 'DELETE' });
+    loadFiles();
+  }
+
+  loadFiles();
 </script>
-</body>
-</html>

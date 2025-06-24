@@ -25,7 +25,7 @@ app.post("/upload", (req, res) => {
     fs.writeFile(rawPath, buffer, err => {
         if (err) return res.status(500).send("Lỗi ghi file .raw");
         convertRawToWav(rawPath, wavPath);
-        console.log(`\u2705 Ghi xong: ${fileName}`);
+        console.log(`✅ Ghi xong: ${fileName}`);
         res.send("OK");
     });
 });
@@ -35,6 +35,17 @@ app.get("/files", (req, res) => {
     fs.readdir(audioDir, (err, files) => {
         if (err) return res.status(500).json([]);
         res.json(files.filter(f => f.endsWith(".wav")));
+    });
+});
+
+// ❌ Xóa toàn bộ file
+app.delete("/files", (req, res) => {
+    fs.readdir(audioDir, (err, files) => {
+        if (err) return res.status(500).send("Lỗi đọc thư mục");
+        for (const file of files) {
+            fs.unlinkSync(path.join(audioDir, file));
+        }
+        res.send("Đã xóa hết file");
     });
 });
 
@@ -74,5 +85,5 @@ function createWavHeader(dataSize, options) {
 }
 
 app.listen(PORT, () => {
-    console.log(`\u{1F680} Server chay tai: http://localhost:${PORT}`);
+    console.log(`🚀 Server chay tai: http://localhost:${PORT}`);
 });
