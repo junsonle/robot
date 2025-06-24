@@ -15,48 +15,52 @@ app.use(express.static('public'));
 app.use('/audio', express.static(audioDir));
 
 /* 🔌 WebSocket nhận chunk */
-ws.on('message', (msg) => {
-    try {
-        const { uploadId, index, isLast, data } = JSON.parse(msg);
+wss.on('connection', (ws) => {
+    console.log('🔌 ESP32 connected');
 
-        // Nếu thiếu field => từ chối
-        if (!uploadId || index === undefined || !data) {
-            ws.send(JSON.stringify({ status: 'error', reason: 'Invalid payload fields' }));
-            return;
-        }
+    ws.on('message', (msg) => {
+        try {
+            const { uploadId, index, isLast, data } = JSON.parse(msg);
 
-        const buffer = Buffer.from(data, 'base64');
-        const chunkPath = path.join(chunkDir, `audio_${uploadId}_chunk_${index}.bin`);
-        fs.writeFileSync(chunkPath, buffer);
-        console.log(`📥 Chunk ${index} saved (${buffer.length} bytes)`);
-
-        if (isLast) {
-            console.log(`🧩 Final chunk of ${uploadId}, merging...`);
-            const chunks = [];
-            let i = 0;
-            while (true) {
-                const f = path.join(chunkDir, `audio_${uploadId}_chunk_${i}.bin`);
-                if (!fs.existsSync(f)) break;
-                chunks.push(fs.readFileSync(f));
-                i++;
+            // Nếu thiếu field => từ chối
+            if (!uploadId || index === undefined || !data) {
+                ws.send(JSON.stringify({ status: 'error', reason: 'Invalid payload fields' }));
+                return;
             }
 
-            const merged = Buffer.concat(chunks);
-            const output = path.join(audioDir, `audio_${uploadId}.wav`);
-            writeWavFile(merged, output);
+            const buffer = Buffer.from(data, 'base64');
+            const chunkPath = path.join(chunkDir, `audio_${uploadId}_chunk_${index}.bin`);
+            fs.writeFileSync(chunkPath, buffer);
+            console.log(`📥 Chunk ${index} saved (${buffer.length} bytes)`);
 
-            for (let j = 0; j < i; j++) {
-                fs.unlinkSync(path.join(chunkDir, `audio_${uploadId}_chunk_${j}.bin`));
+            if (isLast) {
+                console.log(`🧩 Final chunk of ${uploadId}, merging...`);
+                const chunks = [];
+                let i = 0;
+                while (true) {
+                    const f = path.join(chunkDir, `audio_${uploadId}_chunk_${i}.bin`);
+                    if (!fs.existsSync(f)) break;
+                    chunks.push(fs.readFileSync(f));
+                    i++;
+                }
+
+                const merged = Buffer.concat(chunks);
+                const output = path.join(audioDir, `audio_${uploadId}.wav`);
+                writeWavFile(merged, output);
+
+                for (let j = 0; j < i; j++) {
+                    fs.unlinkSync(path.join(chunkDir, `audio_${uploadId}_chunk_${j}.bin`));
+                }
+
+                ws.send(JSON.stringify({ status: 'done', file: `audio_${uploadId}.wav` }));
+                console.log(`✅ Saved final file: ${output}`);
             }
 
-            ws.send(JSON.stringify({ status: 'done', file: `audio_${uploadId}.wav` }));
-            console.log(`✅ Saved final file: ${output}`);
+        } catch (e) {
+            console.error('❌ Error parsing WebSocket message:', e.message);
+            ws.send(JSON.stringify({ status: 'error', reason: 'Invalid JSON' }));
         }
-
-    } catch (e) {
-        console.error('❌ Error parsing WebSocket message:', e.message);
-        ws.send(JSON.stringify({ status: 'error', reason: 'Invalid JSON' }));
-    }
+    });
 });
 
 /* 📂 API: Danh sách file */
