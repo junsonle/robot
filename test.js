@@ -1,4 +1,4 @@
-// 📁 server.js - Node.js server nhận âm thanh từ ESP32 và chuyển .raw thành .wav
+// 📁 server.js - Node.js server nhận chuỗi base64 từ ESP32 và chuyển .raw thành .wav
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -8,14 +8,19 @@ const PORT = process.env.PORT || 3000;
 const audioDir = path.join(__dirname, "audio");
 if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir);
 
-app.use(express.json({ limit: "10mb" }));
+// ✔️ Parse JSON body rõ ràng
+app.use(express.text({ type: "application/json", limit: "10mb" }));
 app.use("/audio", express.static(audioDir));
 app.use(express.static("public")); // nếu có giao diện HTML
 
-// ✅ Nhận âm thanh base64 từ ESP32
+// ✅ Nhận chuỗi base64 (không JSON object) từ ESP32
 app.post("/upload", (req, res) => {
-    const base64Data = req.body.audio;
-    if (!base64Data) return res.status(400).send("Thiếu dữ liệu 'audio'");
+    let base64Data = req.body;
+
+    // Gố bỏ dấu ngoặc " nếu ESP gửi có bao
+    if (base64Data.startsWith('"') && base64Data.endsWith('"')) {
+        base64Data = base64Data.slice(1, -1);
+    }
 
     const buffer = Buffer.from(base64Data, "base64");
     const fileName = `audio_${Date.now()}`;
